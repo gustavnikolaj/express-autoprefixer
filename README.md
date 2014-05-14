@@ -26,7 +26,7 @@ Make sure you have node.js and npm installed, then run:
 
 ```javascript
 var express = require('express'),
-    autoprefixer = require('express-autoprefixer),
+    autoprefixer = require('express-autoprefixer'),
     root = '/path/to/my/static/files';
 
 express.createServer()
