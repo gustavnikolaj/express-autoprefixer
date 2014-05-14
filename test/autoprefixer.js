@@ -66,6 +66,14 @@ describe('test server with autoprefixer', function () {
                 '}',
                done);
     });
+    it('should not prefix properties supported in Chrome > 30 as per options given', function (done) {
+        expect('/border-radius.css',
+               'to respond',
+                '.border-radius {',
+                '    border-radius: 10px;',
+                '}',
+               done);
+    });
     it('should work with less files served through express-compiless', function (done) {
         expect('/compiless.less',
                'to respond',
