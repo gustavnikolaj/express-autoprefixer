@@ -2,7 +2,7 @@
 
 
 [![NPM version](https://badge.fury.io/js/express-autoprefixer.svg)](http://badge.fury.io/js/express-autoprefixer)
-
+[![Dependency Status](https://david-dm.org/gustavnikolaj/express-autoprefixer.png)](https://david-dm.org/gustavnikolaj/express-autoprefixer)
 
 Middleware that prefixes css on-the-fly. Intended to be used in a
 development setting with the `express.static` middleware, but should
