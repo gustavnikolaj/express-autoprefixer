@@ -33,7 +33,7 @@ describe('test server with autoprefixer', function () {
                 }
                 next();
             })
-            .use(autoprefixer({options: 'Chrome > 30'}))
+            .use(autoprefixer('Chrome > 30', { cascade: false }))
             .use(express['static'](root))
             .listen(portNumber, done);
     });
@@ -90,11 +90,6 @@ describe('tests with no test server', function () {
         it('should find options itself if none is given', function () {
             expect(function () {
                 autoprefixer();
-            }, 'not to throw');
-        });
-        it('should take options', function () {
-            expect(function () {
-                autoprefixer({ options: 'Chrome 30' });
             }, 'not to throw');
         });
     });
