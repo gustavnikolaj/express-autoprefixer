@@ -20,8 +20,7 @@
   "author": "Gustav Nikolaj Olsen <gustavnikolaj@gmail.com>",
   "license": "BSD",
   "dependencies": {
-    "express-hijackresponse": "=0.1.2",
-    "bufferjs": "=2.0.0"
+    "express-hijackresponse": "=0.1.2"
   },
   "peerDependencies": {
     "autoprefixer": "~3.0"
