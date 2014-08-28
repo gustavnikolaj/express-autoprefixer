@@ -33,7 +33,7 @@ describe('test server with autoprefixer', function () {
                 }
                 next();
             })
-            .use(autoprefixer('Chrome > 30', { cascade: false }))
+            .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
             .use(express['static'](root))
             .listen(portNumber, done);
     });
