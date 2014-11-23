@@ -83,6 +83,13 @@ describe('test server with autoprefixer', function () {
                 '}',
                done);
     });
+
+    it('should serve html without throwing errors', function (done) {
+        expect('index.html', 'to respond',
+            '<!DOCTYPE html>',
+            '<html></html>',
+            done);
+    });
 });
 
 describe('tests with no test server', function () {
