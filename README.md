@@ -35,7 +35,7 @@ var express = require('express'),
     root = '/path/to/my/static/files';
 
 express.createServer()
-    .use(autoprefixer({ browsers: 'last two versions', cascade: false }))
+    .use(autoprefixer({ browsers: 'last 2 versions', cascade: false }))
     .use(express.static(root))
     .listen(1337);
 ```
