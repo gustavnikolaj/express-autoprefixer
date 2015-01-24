@@ -4,6 +4,7 @@
   "description": "Express middleware that prefixes css on the way out.",
   "main": "lib/autoprefixer.js",
   "scripts": {
+    "coverage": "istanbul cover --include-all-sources _mocha -- -R dot",
     "lint": "jshint . && jscs .",
     "test": "mocha",
     "prepublish": "mocha"
@@ -29,6 +30,7 @@
   "devDependencies": {
     "autoprefixer": "5.0.0",
     "express": "4.11.1",
+    "istanbul": "0.3.5",
     "jscs": "1.10.0",
     "jshint": "2.6.0",
     "mocha": "1.18.2",
