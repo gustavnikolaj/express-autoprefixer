@@ -21,7 +21,6 @@
   "author": "Gustav Nikolaj Olsen <gustavnikolaj@gmail.com>",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "express": "4.11.1",
     "express-hijackresponse": "0.2.1"
   },
   "peerDependencies": {
