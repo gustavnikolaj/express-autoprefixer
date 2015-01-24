@@ -1,103 +1,86 @@
 /*global describe,it,before,after*/
 var express = require('express'),
-    Path = require('path'),
-    request = require('request'),
-    passError = require('passerror'),
-    expect = require('unexpected'),
     autoprefixer = require('../lib/autoprefixer');
 
-var root = Path.resolve(__dirname, 'root'),
-    // Pick a random TCP port above 10000 (.listen(0) doesn't work anymore?)
-    portNumber = 10000 + Math.floor(55536 * Math.random()),
-    baseUrl = 'http://127.0.0.1:' + portNumber,
-    server;
 
-expect.addAssertion('to respond', function (expect, subject) {
-    var args = Array.prototype.slice.call(arguments, 2);
-    var lines = args.slice(0, -1);
-    var done = args[args.length - 1];
+var expect = require('unexpected').installPlugin(require('unexpected-express'));
 
-    request(baseUrl + '/' + subject, passError(done, function (response, body) {
-        expect(body, 'to equal', lines.join('\n') + '\n');
-        done();
-    }));
+expect.addAssertion('to be served as', function (expect, subject, value, done) {
+    var request = (typeof subject === 'object') ? subject : {};
+    var response = (typeof value === 'object') ? value : {};
+    var browsers = request.browsers || 'Chrome > 30';
+
+    if (typeof subject === 'string') { request.content = subject; }
+    if (!request.url) { request.url = '/style.css'; }
+    if (typeof value === 'string') { response.body = value; }
+
+    var app = express()
+        .use(autoprefixer({ browsers: browsers, cascade: false }))
+        .use(function (req, res, next) {
+            if (req.contentType) {
+                res.contentType(req.contentType);
+            }
+            if (!req.contentType && /\.css$/.test(req.url)) {
+                res.contentType('text/css')
+            }
+            res.status(200).end(req.content);
+        });
+
+    expect(app, 'to yield exchange', {
+        request: request,
+        response: response
+    }, done);
 });
 
-describe('test server with autoprefixer', function () {
-    before(function (done) {
-        server = express.createServer()
-            .use(function (req, res, next) {
-                // stubbed compiless middleware to change content type on less files
-                if (/\.less$/.test(req.url)) {
-                    res.setHeader('Content-Type', 'text/css');
-                }
-                next();
-            })
-            .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
-            .use(express['static'](root))
-            .listen(portNumber, done);
+describe('express-autoprefixer', function () {
+    it('should export a function', function () {
+        expect(autoprefixer, 'to be a function');
     });
-
-    after(function () {
-        server.close();
+    it('should return a function when calling the exported module', function () {
+        expect(autoprefixer(), 'to be a function');
     });
-
-    it('should not mess with request for non-css file', function (done) {
-        expect('/something.txt',
-               'to respond',
-               'foo',
-               done);
+    it('should not mess with request for a non-css file', function (done) {
+        expect({
+            url: '/hello-world.txt',
+            content: 'hello world'
+        }, 'to be served as', 'hello world', done);
     });
-    it('should prefix animation-name', function (done) {
-        expect('/no-prefix.css',
-               'to respond',
-                '.missing-prefix {',
-                '    -webkit-animation-name: test;',
-                '    animation-name: test;',
-                '}',
-               done);
+    it('should prefix animation', function (done) {
+        expect(
+            '.foo { animation: bar; }',
+            'to be served as',
+            '.foo { -webkit-animation: bar; animation: bar; }',
+            done
+        );
     });
     it('should not prefix already prefixed properties', function (done) {
-        expect('/with-prefix.css',
-               'to respond',
-                '.prefix-already-present {',
-                '    -webkit-animation-name: test;',
-                '    animation-name: test;',
-                '}',
-               done);
+        expect(
+            '.foo { -webkit-animation: bar; animation: bar; }',
+            'to be served as',
+            '.foo { -webkit-animation: bar; animation: bar; }',
+            done
+        );
     });
-    it('should not prefix properties supported in Chrome > 30 as per options given', function (done) {
-        expect('/border-radius.css',
-               'to respond',
-                '.border-radius {',
-                '    border-radius: 10px;',
-                '}',
-               done);
+    it('should not prefix properties supported in the selected browsers', function (done) {
+        expect({
+            content: '.foo { border-radius: 10px; }',
+            browsers: 'Chrome > 30'
+        }, 'to be served as', '.foo { border-radius: 10px; }', done);
     });
     it('should work with less files served through express-compiless', function (done) {
-        expect('/compiless.less',
-               'to respond',
-                '.compilessOutput {',
-                '    -webkit-animation-name: test;',
-                '    animation-name: test;',
-                '}',
-               done);
+        // express-compiless will compile .less files on the fly and serve the
+        // compiled content with content-type text/css on the original url.
+        expect({
+            url: '/style.less',
+            contentType: 'text/css',
+            content: '.foo { animation: bar; }'
+        }, 'to be served as', '.foo { -webkit-animation: bar; animation: bar; }', done);
     });
-
     it('should serve html without throwing errors', function (done) {
-        expect('index.html', 'to respond',
-            '<!DOCTYPE html>',
-            '<html></html>',
-            done);
-    });
-});
-
-describe('tests with no test server', function () {
-    describe('constructor', function () {
-        it('should find options itself if none is given', function () {
-            expect(function () {
-                autoprefixer();
-            }, 'not to throw');
-        });
+        expect({
+            url: '/index.html',
+            contentType: 'text/html',
+            content: '<!DOCTYPE html><html></html>'
+        }, 'to be served as', '<!DOCTYPE html><html></html>', done);
     });
 });
