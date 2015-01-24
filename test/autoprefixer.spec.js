@@ -1,4 +1,4 @@
-/*global describe,it,before,after*/
+/*global describe, it*/
 var express = require('express'),
     autoprefixer = require('../lib/autoprefixer');
 
@@ -21,7 +21,7 @@ expect.addAssertion('to be served as', function (expect, subject, value, done) {
                 res.contentType(req.contentType);
             }
             if (!req.contentType && /\.css$/.test(req.url)) {
-                res.contentType('text/css')
+                res.contentType('text/css');
             }
             res.status(200).end(req.content);
         });
