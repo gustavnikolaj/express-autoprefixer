@@ -21,6 +21,11 @@
     "middleware"
   ],
   "author": "Gustav Nikolaj Olsen <gustavnikolaj@gmail.com>",
+  "contributors": [
+    "Andreas Lind <andreas@one.com>",
+    "Sune Simonsen <sune@we-knowhow.dk>",
+    "Peter Müller <munter@fumle.dk>"
+  ],
   "license": "BSD-3-Clause",
   "dependencies": {
     "express-hijackresponse": "0.2.1"
