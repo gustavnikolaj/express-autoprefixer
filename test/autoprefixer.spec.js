@@ -23,7 +23,10 @@ expect.addAssertion('to be served as', function (expect, subject, value) {
             if (!req.contentType && /\.css$/.test(req.url)) {
                 res.contentType('text/css');
             }
-            res.status(200).send(req.content);
+            res.setHeader('ETag', 'W/"fake-etag"');
+            res.status(200);
+            res.write(req.content);
+            res.end();
         });
 
     return expect(app, 'to yield exchange', {
@@ -42,15 +45,23 @@ describe('express-autoprefixer', function () {
     it('should not mess with request for a non-css file', function () {
         return expect({
             url: '/hello-world.txt',
+            contentType: 'text/plain',
             content: 'hello world'
-        }, 'to be served as', 'hello world');
+        }, 'to be served as', {
+            headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'ETag': expect.it('not to match', /-autoprefixer/)
+            },
+            body: 'hello world'
+        });
     });
     it('should prefix animation', function () {
-        return expect(
-            '.foo { animation: bar; }',
-            'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }'
-        );
+        return expect('.foo { animation: bar; }', 'to be served as', {
+            headers: {
+                'ETag': expect.it('to match', /-autoprefixer/)
+            },
+            body: '.foo { -webkit-animation: bar; animation: bar; }'
+        });
     });
     it('should not prefix already prefixed properties', function () {
         return expect(

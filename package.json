@@ -28,7 +28,7 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
-    "express-interceptor": "1.0.0"
+    "express-interceptor": "1.0.1"
   },
   "peerDependencies": {
     "autoprefixer": "5"
