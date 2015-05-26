@@ -8,7 +8,7 @@ var expect = require('unexpected').installPlugin(require('unexpected-express'));
 expect.addAssertion('to be served as', function (expect, subject, value, done) {
     var request = (typeof subject === 'object') ? subject : {};
     var response = (typeof value === 'object') ? value : {};
-    var browsers = request.browsers || 'Chrome > 30';
+    var browsers = request.browsers || 'Chrome > 30';
 
     if (typeof subject === 'string') { request.content = subject; }
     if (!request.url) { request.url = '/style.css'; }
