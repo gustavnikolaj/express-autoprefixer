@@ -5,7 +5,7 @@ var express = require('express'),
 
 var expect = require('unexpected').installPlugin(require('unexpected-express'));
 
-expect.addAssertion('to be served as', function (expect, subject, value, done) {
+expect.addAssertion('to be served as', function (expect, subject, value) {
     var request = (typeof subject === 'object') ? subject : {};
     var response = (typeof value === 'object') ? value : {};
     var browsers = request.browsers || 'Chrome > 30';
@@ -23,64 +23,62 @@ expect.addAssertion('to be served as', function (expect, subject, value, done) {
             if (!req.contentType && /\.css$/.test(req.url)) {
                 res.contentType('text/css');
             }
-            res.status(200).end(req.content);
+            res.status(200).send(req.content);
         });
 
-    expect(app, 'to yield exchange', {
+    return expect(app, 'to yield exchange', {
         request: request,
         response: response
-    }, done);
+    });
 });
 
 describe('express-autoprefixer', function () {
     it('should export a function', function () {
-        expect(autoprefixer, 'to be a function');
+        return expect(autoprefixer, 'to be a function');
     });
     it('should return a function when calling the exported module', function () {
-        expect(autoprefixer(), 'to be a function');
+        return expect(autoprefixer(), 'to be a function');
     });
-    it('should not mess with request for a non-css file', function (done) {
-        expect({
+    it('should not mess with request for a non-css file', function () {
+        return expect({
             url: '/hello-world.txt',
             content: 'hello world'
-        }, 'to be served as', 'hello world', done);
+        }, 'to be served as', 'hello world');
     });
-    it('should prefix animation', function (done) {
-        expect(
+    it('should prefix animation', function () {
+        return expect(
             '.foo { animation: bar; }',
             'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }',
-            done
+            '.foo { -webkit-animation: bar; animation: bar; }'
         );
     });
-    it('should not prefix already prefixed properties', function (done) {
-        expect(
+    it('should not prefix already prefixed properties', function () {
+        return expect(
             '.foo { -webkit-animation: bar; animation: bar; }',
             'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }',
-            done
+            '.foo { -webkit-animation: bar; animation: bar; }'
         );
     });
-    it('should not prefix properties supported in the selected browsers', function (done) {
-        expect({
+    it('should not prefix properties supported in the selected browsers', function () {
+        return expect({
             content: '.foo { border-radius: 10px; }',
             browsers: 'Chrome > 30'
-        }, 'to be served as', '.foo { border-radius: 10px; }', done);
+        }, 'to be served as', '.foo { border-radius: 10px; }');
     });
-    it('should work with less files served through express-compiless', function (done) {
+    it('should work with less files served through express-compiless', function () {
         // express-compiless will compile .less files on the fly and serve the
         // compiled content with content-type text/css on the original url.
-        expect({
+        return expect({
             url: '/style.less',
             contentType: 'text/css',
             content: '.foo { animation: bar; }'
-        }, 'to be served as', '.foo { -webkit-animation: bar; animation: bar; }', done);
+        }, 'to be served as', '.foo { -webkit-animation: bar; animation: bar; }');
     });
-    it('should serve html without throwing errors', function (done) {
-        expect({
+    it('should serve html without throwing errors', function () {
+        return expect({
             url: '/index.html',
             contentType: 'text/html',
             content: '<!DOCTYPE html><html></html>'
-        }, 'to be served as', '<!DOCTYPE html><html></html>', done);
+        }, 'to be served as', '<!DOCTYPE html><html></html>');
     });
 });
