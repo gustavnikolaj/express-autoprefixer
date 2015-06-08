@@ -92,4 +92,50 @@ describe('express-autoprefixer', function () {
             content: '<!DOCTYPE html><html></html>'
         }, 'to be served as', '<!DOCTYPE html><html></html>');
     });
+    describe('unexpected-fs tests', function () {
+        var expect = require('unexpected')
+            .clone()
+            .installPlugin(require('unexpected-fs'))
+            .installPlugin(require('unexpected-express'))
+            .addAssertion('to yield response', function (expect, subject, value) {
+                var browsers = subject.browsers || 'Chrome > 30';
+                var app = express()
+                    .use(autoprefixer({ browsers: browsers, cascade: false }))
+                    .use(express['static']('/data'));
+                return expect(app, 'to yield exchange', {
+                    request: subject,
+                    response: value
+                });
+            });
+        it('should allow a request', function () {
+            var mockFs = {
+                '/data': {
+                    'foobar.css': {
+                        _isFile: true,
+                        mtime: new Date(1),
+                        content: '.foo { animation-name: bar; }'
+                    }
+                }
+            };
+            return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
+                statusCode: 200,
+                headers: {
+                    ETag: /^W\/".*-autoprefixer"$/
+                }
+            }).then(function (context) {
+                var etag = context.httpResponse.headers.get('ETag');
+                return expect({
+                    url: '/foobar.css',
+                    headers: {
+                        'If-None-Match': etag
+                    }
+                }, 'with fs mocked out', mockFs, 'to yield response', {
+                    statusCode: 304,
+                    headers: {
+                        ETag: etag
+                    }
+                });
+            });
+        });
+    });
 });
