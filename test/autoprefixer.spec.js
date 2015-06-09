@@ -107,16 +107,16 @@ describe('express-autoprefixer', function () {
                     response: value
                 });
             });
-        it('should allow a request', function () {
-            var mockFs = {
-                '/data': {
-                    'foobar.css': {
-                        _isFile: true,
-                        mtime: new Date(1),
-                        content: '.foo { animation-name: bar; }'
-                    }
+        var mockFs = {
+            '/data': {
+                'foobar.css': {
+                    _isFile: true,
+                    mtime: new Date(1),
+                    content: '.foo { animation-name: bar; }'
                 }
-            };
+            }
+        };
+        it('should allow a request to respond with 304', function () {
             return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
                 statusCode: 200,
                 headers: {
@@ -136,6 +136,31 @@ describe('express-autoprefixer', function () {
                     }
                 });
             });
+        });
+        it('should respond 200 if a valid etag comes after autoprefixer is enabled', function () {
+            return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
+                statusCode: 200,
+                headers: {
+                    ETag: /^W\/".*-autoprefixer"$/
+                }
+            }).then(function (context) {
+                var etag = context.httpResponse.headers.get('ETag');
+                var oldEtag = etag.replace(/-autoprefixer"$/, '"');
+                return expect({
+                    url: '/foobar.css',
+                    headers: {
+                        'If-None-Match': oldEtag
+                    }
+                }, 'with fs mocked out', mockFs, 'to yield response', {
+                    statusCode: 200,
+                    headers: {
+                        ETag: etag
+                    }
+                });
+            });
+        });
+        it('should not interupt 404s', function () {
+            return expect('/foobar.css', 'with fs mocked out', { '/data': {} }, 'to yield response', 404);
         });
     });
 });
