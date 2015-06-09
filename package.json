@@ -43,7 +43,6 @@
     "messy": "6.2.0",
     "mocha": "2.2.5",
     "postcss": "4.1.11",
-    "request": "2.11.4",
     "unexpected": "7.5.0",
     "unexpected-express": "6.3.1",
     "unexpected-fs": "1.0.0",
