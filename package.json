@@ -41,7 +41,7 @@
     "jscs": "1.10.0",
     "jshint": "2.6.0",
     "messy": "6.2.0",
-    "mocha": "1.18.2",
+    "mocha": "2.2.5",
     "passerror": "1.0.1",
     "postcss": "4.1.11",
     "request": "2.11.4",
