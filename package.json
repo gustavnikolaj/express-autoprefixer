@@ -28,7 +28,7 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
-    "hijackresponse": "1.0.0"
+    "hijackresponse": "1.0.1"
   },
   "peerDependencies": {
     "postcss": "4",
