@@ -31,18 +31,18 @@
     "hijackresponse": "1.0.1"
   },
   "peerDependencies": {
-    "postcss": "4",
-    "autoprefixer": "5"
+    "postcss": "5",
+    "autoprefixer": "6"
   },
   "devDependencies": {
-    "autoprefixer": "5.2.0",
+    "autoprefixer": "6.2.3",
     "express": "4.12.4",
     "istanbul": "0.3.15",
     "jscs": "1.10.0",
     "jshint": "2.6.0",
     "messy": "6.2.0",
     "mocha": "2.2.5",
-    "postcss": "4.1.11",
+    "postcss": "5.0.14",
     "unexpected": "7.5.0",
     "unexpected-express": "6.3.1",
     "unexpected-fs": "1.0.0",
