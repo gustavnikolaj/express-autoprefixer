@@ -40,7 +40,7 @@
     "istanbul": "0.3.15",
     "jscs": "1.10.0",
     "jshint": "2.6.0",
-    "mocha": "2.2.5",
+    "mocha": "2.4.5",
     "postcss": "4.1.11",
     "unexpected": "10.8.4",
     "unexpected-express": "8.1.0",
