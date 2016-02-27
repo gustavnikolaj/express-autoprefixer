@@ -20,6 +20,15 @@ middleware issuing the original response from being confused into
 sending a false positive `304 Not Modified` if autoprefixer is turned
 off or removed from the stack later.
 
+## Important note regarding node 0.10
+
+Major versions of autoprefixer higher than 5 will not support node 0.10, as they
+rely on features not supported in that version. If you are still using node 0.10
+you should stick to autoprefixer in the 5-series, and use express-autoprefixer
+from the major version 4 range.
+
+Major version 5 and later of express-autoprefixer will use autoprefixer version
+6, and will hence no longer support node 0.10.
 
 ## Installation
 
