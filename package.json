@@ -1,6 +1,6 @@
 {
   "name": "express-autoprefixer",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Express middleware that prefixes css on the way out.",
   "main": "lib/autoprefixer.js",
   "scripts": {
