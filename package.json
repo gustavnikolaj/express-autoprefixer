@@ -5,7 +5,7 @@
   "main": "lib/autoprefixer.js",
   "scripts": {
     "coverage": "istanbul cover --include-all-sources _mocha -- -R dot",
-    "lint": "jshint . && jscs .",
+    "lint": "eslint .",
     "test": "mocha",
     "travis": "npm run lint && npm run test",
     "prepublish": "mocha"
@@ -37,10 +37,10 @@
     "postcss": "^5.0.0"
   },
   "devDependencies": {
+    "eslint": "2.4.0",
+    "eslint-config-onelint": "1.0.2",
     "express": "4.13.4",
     "istanbul": "0.4.2",
-    "jscs": "2.10.1",
-    "jshint": "2.9.1",
     "mocha": "2.4.5",
     "unexpected": "10.8.4",
     "unexpected-express": "8.1.0",
