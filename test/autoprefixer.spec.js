@@ -101,7 +101,7 @@ describe('express-autoprefixer', function () {
                 var browsers = subject.browsers || 'Chrome > 30';
                 var app = express()
                     .use(autoprefixer({ browsers: browsers, cascade: false }))
-                    .use(express['static']('/data'));
+                    .use(express.static('/data'));
                 return expect(app, 'to yield exchange', {
                     request: subject,
                     response: value
