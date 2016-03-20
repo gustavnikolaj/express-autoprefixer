@@ -30,6 +30,7 @@
   "dependencies": {
     "autoprefixer": "^6.0.0",
     "hijackresponse": "1.0.3",
+    "lru-cache": "4.0.0",
     "postcss": "^5.0.0"
   },
   "peerDependencies": {
