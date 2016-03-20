@@ -99,8 +99,9 @@ describe('express-autoprefixer', function () {
             .installPlugin(require('unexpected-express'))
             .addAssertion('to yield response', function (expect, subject, value) {
                 var browsers = subject.browsers || 'Chrome > 30';
+                var cacheDump = subject.cacheDump || [];
                 var app = express()
-                    .use(autoprefixer({ browsers: browsers, cascade: false }))
+                    .use(autoprefixer({ browsers: browsers, cascade: false, _cacheDump: cacheDump }))
                     .use(express['static']('/data'));
                 return expect(app, 'to yield exchange', {
                     request: subject,
@@ -109,6 +110,11 @@ describe('express-autoprefixer', function () {
             });
         var mockFs = {
             '/data': {
+                'script.js': {
+                    _isFile: true,
+                    mtime: new Date(10),
+                    content: 'alert("helloworld");'
+                },
                 'foobar.css': {
                     _isFile: true,
                     mtime: new Date(1),
@@ -161,6 +167,60 @@ describe('express-autoprefixer', function () {
         });
         it('should not interupt 404s', function () {
             return expect('/foobar.css', 'with fs mocked out', { '/data': {} }, 'to yield response', 404);
+        });
+        describe('contentTypeCache', function () {
+            it('should allow a request to respond with 304 for non text/css', function () {
+                return expect('/script.js', 'with fs mocked out', mockFs, 'to yield response', {
+                    statusCode: 200,
+                    headers: {
+                        ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
+                    }
+                }).then(function (context) {
+                    var eTag = context.httpResponse.headers.get('ETag');
+                    return expect({
+                        url: '/script.js',
+                        headers: {
+                            'If-None-Match': eTag
+                        },
+                        // Preload the contentTypeCache with the information
+                        // about the file. (the middleware is reinstantiated
+                        // on every assertion so it does not survive between
+                        // expect calls.)
+                        cacheDump: [ { k: '/script.js', v: 'application/javascript', e: 0 } ]
+                    }, 'with fs mocked out', mockFs, 'to yield response', {
+                        statusCode: 304,
+                        headers: {
+                            ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
+                        }
+                    });
+                });
+            });
+            it('should allow a request to respond with 304 for text/css', function () {
+                return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
+                    statusCode: 200,
+                    headers: {
+                        ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
+                    }
+                }).then(function (context) {
+                    var eTag = context.httpResponse.headers.get('ETag');
+                    return expect({
+                        url: '/foobar.css',
+                        headers: {
+                            'If-None-Match': eTag
+                        },
+                        // Preload the contentTypeCache with the information
+                        // about the file. (the middleware is reinstantiated
+                        // on every assertion so it does not survive between
+                        // expect calls.)
+                        cacheDump: [ { k: '/foobar.css', v: 'text/css', e: 0 } ]
+                    }, 'with fs mocked out', mockFs, 'to yield response', {
+                        statusCode: 304,
+                        headers: {
+                            ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
+                        }
+                    });
+                });
+            });
         });
     });
 });
