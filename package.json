@@ -29,7 +29,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "autoprefixer": "^6.0.0",
-    "hijackresponse": "1.1.0",
+    "hijackresponse": "2.0.0",
     "lru-cache": "4.0.0",
     "postcss": "^5.0.0"
   },
