@@ -119,7 +119,7 @@ describe('express-autoprefixer', function () {
             return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
-                    ETag: /^W\/".*-autoprefixer"$/
+                    ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
                 }
             }).then(function (context) {
                 var etag = context.httpResponse.headers.get('ETag');
@@ -137,15 +137,41 @@ describe('express-autoprefixer', function () {
                 });
             });
         });
+        it('should not respond 304 when the autoprefixer config is different', function () {
+            return expect({
+                url: '/foobar.css',
+                browsers: 'Chrome > 29'
+            }, 'to yield response', {
+                statusCode: 200,
+                headers: {
+                    ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
+                }
+            }).then(function (context) {
+                var etag = context.httpResponse.headers.get('ETag');
+
+                return expect({
+                    url: '/foobar.css',
+                    browsers: 'Chrome > 30',
+                    headers: {
+                        'If-None-Match': etag
+                    }
+                }, 'to yield response', {
+                    statusCode: 200,
+                    headers: {
+                        ETag: expect.it('not to be', etag)
+                    }
+                });
+            });
+        });
         it('should respond 200 if a valid etag comes after autoprefixer is enabled', function () {
             return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
-                    ETag: /^W\/".*-autoprefixer"$/
+                    ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
                 }
             }).then(function (context) {
                 var etag = context.httpResponse.headers.get('ETag');
-                var oldEtag = etag.replace(/-autoprefixer"$/, '"');
+                var oldEtag = etag.replace(/-autoprefixer\[[a-f0-9]{32}\]"$/, '"');
                 return expect({
                     url: '/foobar.css',
                     headers: {
@@ -173,7 +199,7 @@ describe('express-autoprefixer', function () {
                     response: {
                         statusCode: 200,
                         headers: {
-                            ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
+                            ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                         }
                     }
                 }).then(function (context) {
@@ -188,7 +214,7 @@ describe('express-autoprefixer', function () {
                         response: {
                             statusCode: 304,
                             headers: {
-                                ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
+                                ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                             }
                         }
                     });
@@ -204,7 +230,7 @@ describe('express-autoprefixer', function () {
                     response: {
                         statusCode: 200,
                         headers: {
-                            ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
+                            ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                         }
                     }
                 }).then(function (context) {
@@ -219,7 +245,7 @@ describe('express-autoprefixer', function () {
                         response: {
                             statusCode: 304,
                             headers: {
-                                ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
+                                ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                             }
                         }
                     });
