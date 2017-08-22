@@ -2,6 +2,7 @@
 var express = require('express'),
     autoprefixer = require('../lib/autoprefixer');
 
+var fixturesPath = require('path').resolve(__dirname, './fixtures');
 
 var expect = require('unexpected').installPlugin(require('unexpected-express'));
 
@@ -32,6 +33,27 @@ expect.addAssertion('to be served as', function (expect, subject, value) {
     return expect(app, 'to yield exchange', {
         request: request,
         response: response
+    });
+});
+
+expect.addAssertion('to yield response', function (expect, subject, value) {
+    if (typeof subject === 'string') {
+        subject = { url: subject };
+    }
+    var browsers = subject.browsers || 'Chrome > 30';
+    var cacheDump = subject.cacheDump || [];
+    var app = express()
+        .use(
+            autoprefixer({
+                browsers: browsers,
+                cascade: false,
+                _cacheDump: cacheDump
+            })
+        )
+        .use(express.static(fixturesPath));
+    return expect(app, 'to yield exchange', {
+        request: subject,
+        response: value
     });
 });
 
@@ -93,49 +115,21 @@ describe('express-autoprefixer', function () {
         }, 'to be served as', '<!DOCTYPE html><html></html>');
     });
     describe('unexpected-fs tests', function () {
-        var expect = require('unexpected')
-            .clone()
-            .installPlugin(require('unexpected-fs'))
-            .installPlugin(require('unexpected-express'))
-            .addAssertion('to yield response', function (expect, subject, value) {
-                var browsers = subject.browsers || 'Chrome > 30';
-                var cacheDump = subject.cacheDump || [];
-                var app = express()
-                    .use(autoprefixer({ browsers: browsers, cascade: false, _cacheDump: cacheDump }))
-                    .use(express.static('/data'));
-                return expect(app, 'to yield exchange', {
-                    request: subject,
-                    response: value
-                });
-            });
-        var mockFs = {
-            '/data': {
-                'script.js': {
-                    _isFile: true,
-                    mtime: new Date(10),
-                    content: 'alert("helloworld");'
-                },
-                'foobar.css': {
-                    _isFile: true,
-                    mtime: new Date(1),
-                    content: '.foo { animation-name: bar; }'
-                }
-            }
-        };
         it('should allow a request to respond with 304', function () {
-            return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
+            return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
                     ETag: /^W\/".*-autoprefixer"$/
                 }
             }).then(function (context) {
                 var etag = context.httpResponse.headers.get('ETag');
+
                 return expect({
                     url: '/foobar.css',
                     headers: {
                         'If-None-Match': etag
                     }
-                }, 'with fs mocked out', mockFs, 'to yield response', {
+                }, 'to yield response', {
                     statusCode: 304,
                     headers: {
                         ETag: etag
@@ -144,7 +138,7 @@ describe('express-autoprefixer', function () {
             });
         });
         it('should respond 200 if a valid etag comes after autoprefixer is enabled', function () {
-            return expect('/foobar.css', 'with fs mocked out', mockFs, 'to yield response', {
+            return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
                     ETag: /^W\/".*-autoprefixer"$/
@@ -157,7 +151,7 @@ describe('express-autoprefixer', function () {
                     headers: {
                         'If-None-Match': oldEtag
                     }
-                }, 'with fs mocked out', mockFs, 'to yield response', {
+                }, 'to yield response', {
                     statusCode: 200,
                     headers: {
                         ETag: etag
@@ -166,74 +160,70 @@ describe('express-autoprefixer', function () {
             });
         });
         it('should not interupt 404s', function () {
-            return expect('/foobar.css', 'with fs mocked out', { '/data': {} }, 'to yield response', 404);
+            return expect('/noSuchFile.css', 'to yield response', 404);
         });
         describe('contentTypeCache', function () {
             it('should allow a request to respond with 304 for non text/css', function () {
-                return expect(function () {
-                    var app = express()
-                        .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
-                        .use(express.static('/data'));
+                var app = express()
+                    .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
+                    .use(express.static(fixturesPath));
 
+                return expect(app, 'to yield exchange', {
+                    request: '/script.js',
+                    response: {
+                        statusCode: 200,
+                        headers: {
+                            ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
+                        }
+                    }
+                }).then(function (context) {
+                    var eTag = context.httpResponse.headers.get('ETag');
                     return expect(app, 'to yield exchange', {
-                        request: '/script.js',
+                        request: {
+                            url: '/script.js',
+                            headers: {
+                                'If-None-Match': eTag
+                            }
+                        },
                         response: {
-                            statusCode: 200,
+                            statusCode: 304,
                             headers: {
                                 ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
                             }
                         }
-                    }).then(function (context) {
-                        var eTag = context.httpResponse.headers.get('ETag');
-                        return expect(app, 'to yield exchange', {
-                            request: {
-                                url: '/script.js',
-                                headers: {
-                                    'If-None-Match': eTag
-                                }
-                            },
-                            response: {
-                                statusCode: 304,
-                                headers: {
-                                    ETag: expect.it('not to match', /^W\/".*-autoprefixer"$/)
-                                }
-                            }
-                        });
                     });
-                }, 'with fs mocked out', mockFs, 'not to error');
+                });
             });
             it('should allow a request to respond with 304 for text/css', function () {
-                return expect(function () {
-                    var app = express()
-                        .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
-                        .use(express.static('/data'));
+                var app = express()
+                    .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
+                    .use(express.static(fixturesPath));
 
+                return expect(app, 'to yield exchange', {
+                    request: '/foobar.css',
+                    response: {
+                        statusCode: 200,
+                        headers: {
+                            ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
+                        }
+                    }
+                }).then(function (context) {
+                    var eTag = context.httpResponse.headers.get('ETag');
                     return expect(app, 'to yield exchange', {
-                        request: '/foobar.css',
+                        request: {
+                            url: '/foobar.css',
+                            headers: {
+                                'If-None-Match': eTag
+                            }
+                        },
                         response: {
-                            statusCode: 200,
+                            statusCode: 304,
                             headers: {
                                 ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
                             }
                         }
-                    }).then(function (context) {
-                        var eTag = context.httpResponse.headers.get('ETag');
-                        return expect(app, 'to yield exchange', {
-                            request: {
-                                url: '/foobar.css',
-                                headers: {
-                                    'If-None-Match': eTag
-                                }
-                            },
-                            response: {
-                                statusCode: 304,
-                                headers: {
-                                    ETag: expect.it('to match', /^W\/".*-autoprefixer"$/)
-                                }
-                            }
-                        });
                     });
-                }, 'with fs mocked out', mockFs, 'not to error');
+                });
             });
         });
     });
