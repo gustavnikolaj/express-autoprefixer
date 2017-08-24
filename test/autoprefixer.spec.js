@@ -1,22 +1,21 @@
-var express = require('express'),
-    autoprefixer = require('../lib/autoprefixer');
+const express = require('express');
+const autoprefixer = require('../lib/autoprefixer');
+const expect = require('unexpected')
+    .installPlugin(require('unexpected-express'));
+const fixturesPath = require('path').resolve(__dirname, './fixtures');
 
-var fixturesPath = require('path').resolve(__dirname, './fixtures');
-
-var expect = require('unexpected').installPlugin(require('unexpected-express'));
-
-expect.addAssertion('to be served as', function (expect, subject, value) {
-    var request = (typeof subject === 'object') ? subject : {};
-    var response = (typeof value === 'object') ? value : {};
-    var browsers = request.browsers || 'Chrome > 30';
+expect.addAssertion('to be served as', (expect, subject, value) => {
+    const request = (typeof subject === 'object') ? subject : {};
+    const response = (typeof value === 'object') ? value : {};
+    const browsers = request.browsers || 'Chrome > 30';
 
     if (typeof subject === 'string') { request.content = subject; }
     if (!request.url) { request.url = '/style.css'; }
     if (typeof value === 'string') { response.body = value; }
 
-    var app = express()
+    const app = express()
         .use(autoprefixer({ browsers: browsers, cascade: false }))
-        .use(function (req, res, next) {
+        .use((req, res, next) => {
             if (req.contentType) {
                 res.contentType(req.contentType);
             }
@@ -29,26 +28,17 @@ expect.addAssertion('to be served as', function (expect, subject, value) {
             res.end();
         });
 
-    return expect(app, 'to yield exchange', {
-        request: request,
-        response: response
-    });
+    return expect(app, 'to yield exchange', { request, response });
 });
 
-expect.addAssertion('to yield response', function (expect, subject, value) {
+expect.addAssertion('to yield response', (expect, subject, value) => {
     if (typeof subject === 'string') {
         subject = { url: subject };
     }
-    var browsers = subject.browsers || 'Chrome > 30';
-    var cacheDump = subject.cacheDump || [];
-    var app = express()
-        .use(
-            autoprefixer({
-                browsers: browsers,
-                cascade: false,
-                _cacheDump: cacheDump
-            })
-        )
+    const browsers = subject.browsers || 'Chrome > 30';
+    const cacheDump = subject.cacheDump || [];
+    const app = express()
+        .use(autoprefixer({ browsers, cascade: false, _cacheDump: cacheDump }))
         .use(express.static(fixturesPath));
     return expect(app, 'to yield exchange', {
         request: subject,
@@ -56,14 +46,14 @@ expect.addAssertion('to yield response', function (expect, subject, value) {
     });
 });
 
-describe('express-autoprefixer', function () {
-    it('should export a function', function () {
+describe('express-autoprefixer', () => {
+    it('should export a function', () => {
         return expect(autoprefixer, 'to be a function');
     });
-    it('should return a function when calling the exported module', function () {
+    it('should return a function when calling the exported module', () => {
         return expect(autoprefixer(), 'to be a function');
     });
-    it('should not mess with request for a non-css file', function () {
+    it('should not mess with request for a non-css file', () => {
         return expect({
             url: '/hello-world.txt',
             contentType: 'text/plain',
@@ -76,7 +66,7 @@ describe('express-autoprefixer', function () {
             body: 'hello world'
         });
     });
-    it('should prefix animation', function () {
+    it('should prefix animation', () => {
         return expect('.foo { animation: bar; }', 'to be served as', {
             headers: {
                 'ETag': expect.it('to match', /-autoprefixer/)
@@ -84,20 +74,20 @@ describe('express-autoprefixer', function () {
             body: '.foo { -webkit-animation: bar; animation: bar; }'
         });
     });
-    it('should not prefix already prefixed properties', function () {
+    it('should not prefix already prefixed properties', () => {
         return expect(
             '.foo { -webkit-animation: bar; animation: bar; }',
             'to be served as',
             '.foo { -webkit-animation: bar; animation: bar; }'
         );
     });
-    it('should not prefix properties supported in the selected browsers', function () {
+    it('should not prefix properties supported in the selected browsers', () => {
         return expect({
             content: '.foo { border-radius: 10px; }',
             browsers: 'Chrome > 30'
         }, 'to be served as', '.foo { border-radius: 10px; }');
     });
-    it('should work with less files served through express-compiless', function () {
+    it('should work with less files served through express-compiless', () => {
         // express-compiless will compile .less files on the fly and serve the
         // compiled content with content-type text/css on the original url.
         return expect({
@@ -106,22 +96,22 @@ describe('express-autoprefixer', function () {
             content: '.foo { animation: bar; }'
         }, 'to be served as', '.foo { -webkit-animation: bar; animation: bar; }');
     });
-    it('should serve html without throwing errors', function () {
+    it('should serve html without throwing errors', () => {
         return expect({
             url: '/index.html',
             contentType: 'text/html',
             content: '<!DOCTYPE html><html></html>'
         }, 'to be served as', '<!DOCTYPE html><html></html>');
     });
-    describe('unexpected-fs tests', function () {
-        it('should allow a request to respond with 304', function () {
+    describe('unexpected-fs tests', () => {
+        it('should allow a request to respond with 304', () => {
             return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
                     ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
                 }
-            }).then(function (context) {
-                var etag = context.httpResponse.headers.get('ETag');
+            }).then(context => {
+                const etag = context.httpResponse.headers.get('ETag');
 
                 return expect({
                     url: '/foobar.css',
@@ -136,7 +126,7 @@ describe('express-autoprefixer', function () {
                 });
             });
         });
-        it('should not respond 304 when the autoprefixer config is different', function () {
+        it('should not respond 304 when the autoprefixer config is different', () => {
             return expect({
                 url: '/foobar.css',
                 browsers: 'Chrome > 29'
@@ -145,8 +135,8 @@ describe('express-autoprefixer', function () {
                 headers: {
                     ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
                 }
-            }).then(function (context) {
-                var etag = context.httpResponse.headers.get('ETag');
+            }).then(context => {
+                const etag = context.httpResponse.headers.get('ETag');
 
                 return expect({
                     url: '/foobar.css',
@@ -163,15 +153,15 @@ describe('express-autoprefixer', function () {
                 });
             });
         });
-        it('should respond 200 if a valid etag comes after autoprefixer is enabled', function () {
+        it('should respond 200 if a valid etag comes after autoprefixer is enabled', () => {
             return expect('GET /foobar.css', 'to yield response', {
                 statusCode: 200,
                 headers: {
                     ETag: /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/
                 }
-            }).then(function (context) {
-                var etag = context.httpResponse.headers.get('ETag');
-                var oldEtag = etag.replace(/-autoprefixer\[[a-f0-9]{32}\]"$/, '"');
+            }).then(context => {
+                const etag = context.httpResponse.headers.get('ETag');
+                const oldEtag = etag.replace(/-autoprefixer\[[a-f0-9]{32}\]"$/, '"');
                 return expect({
                     url: '/foobar.css',
                     headers: {
@@ -185,12 +175,12 @@ describe('express-autoprefixer', function () {
                 });
             });
         });
-        it('should not interupt 404s', function () {
+        it('should not interupt 404s', () => {
             return expect('/noSuchFile.css', 'to yield response', 404);
         });
-        describe('contentTypeCache', function () {
-            it('should allow a request to respond with 304 for non text/css', function () {
-                var app = express()
+        describe('contentTypeCache', () => {
+            it('should allow a request to respond with 304 for non text/css', () => {
+                const app = express()
                     .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
                     .use(express.static(fixturesPath));
 
@@ -202,8 +192,8 @@ describe('express-autoprefixer', function () {
                             ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                         }
                     }
-                }).then(function (context) {
-                    var eTag = context.httpResponse.headers.get('ETag');
+                }).then(context => {
+                    const eTag = context.httpResponse.headers.get('ETag');
                     return expect(app, 'to yield exchange', {
                         request: {
                             url: '/script.js',
@@ -220,8 +210,8 @@ describe('express-autoprefixer', function () {
                     });
                 });
             });
-            it('should allow a request to respond with 304 for text/css', function () {
-                var app = express()
+            it('should allow a request to respond with 304 for text/css', () => {
+                const app = express()
                     .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
                     .use(express.static(fixturesPath));
 
@@ -233,8 +223,8 @@ describe('express-autoprefixer', function () {
                             ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                         }
                     }
-                }).then(function (context) {
-                    var eTag = context.httpResponse.headers.get('ETag');
+                }).then(context => {
+                    const eTag = context.httpResponse.headers.get('ETag');
                     return expect(app, 'to yield exchange', {
                         request: {
                             url: '/foobar.css',
