@@ -159,7 +159,8 @@ describe('express-autoprefixer', function () {
                     statusCode: 200,
                     headers: {
                         ETag: expect.it('not to be', etag)
-                    }
+                    },
+                    body: '.foo { -webkit-animation-name: bar; animation-name: bar; }\n'
                 });
             });
         });
