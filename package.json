@@ -4,11 +4,11 @@
   "description": "Express middleware that prefixes css on the way out.",
   "main": "lib/autoprefixer.js",
   "scripts": {
-    "coverage": "istanbul cover --include-all-sources _mocha -- -R dot",
+    "coverage": "jest --coverage",
     "lint": "eslint .",
-    "test": "mocha",
-    "travis": "npm run lint && npm run test",
-    "prepublish": "mocha"
+    "test": "jest --watch",
+    "travis": "npm run lint && npm run coverage",
+    "prepublish": "jest"
   },
   "repository": {
     "type": "git",
@@ -41,8 +41,7 @@
     "eslint": "2.4.0",
     "eslint-config-onelint": "1.0.2",
     "express": "4.13.4",
-    "istanbul": "0.4.2",
-    "mocha": "2.4.5",
+    "jest": "20.0.4",
     "unexpected": "10.33.2",
     "unexpected-express": "9.1.0"
   }
