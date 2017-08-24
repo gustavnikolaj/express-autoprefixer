@@ -179,63 +179,49 @@ describe('express-autoprefixer', () => {
     });
     describe('contentTypeCache', () => {
         it('should allow a request to respond with 304 for non text/css', () => {
-            const app = express()
-                .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
-                .use(express.static(fixturesPath));
-
-            return expect(app, 'to yield exchange', {
-                request: '/script.js',
-                response: {
-                    statusCode: 200,
-                    headers: {
-                        ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
-                    }
+            return expect({
+                url: '/script.js',
+                browsers: 'Chrome > 30'
+            }, 'to yield response', {
+                statusCode: 200,
+                headers: {
+                    ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                 }
             }).then(context => {
                 const eTag = context.httpResponse.headers.get('ETag');
-                return expect(app, 'to yield exchange', {
-                    request: {
-                        url: '/script.js',
-                        headers: {
-                            'If-None-Match': eTag
-                        }
-                    },
-                    response: {
-                        statusCode: 304,
-                        headers: {
-                            ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
-                        }
+                return expect({
+                    url: '/script.js',
+                    headers: {
+                        'If-None-Match': eTag
+                    }
+                }, 'to yield response', {
+                    statusCode: 304,
+                    headers: {
+                        ETag: expect.it('not to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                     }
                 });
             });
         });
         it('should allow a request to respond with 304 for text/css', () => {
-            const app = express()
-                .use(autoprefixer({ browsers: 'Chrome > 30', cascade: false }))
-                .use(express.static(fixturesPath));
-
-            return expect(app, 'to yield exchange', {
-                request: '/foobar.css',
-                response: {
-                    statusCode: 200,
-                    headers: {
-                        ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
-                    }
+            return expect({
+                url: '/foobar.css',
+                browsers: 'Chrome > 30'
+            }, 'to yield response', {
+                statusCode: 200,
+                headers: {
+                    ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                 }
             }).then(context => {
                 const eTag = context.httpResponse.headers.get('ETag');
-                return expect(app, 'to yield exchange', {
-                    request: {
-                        url: '/foobar.css',
-                        headers: {
-                            'If-None-Match': eTag
-                        }
-                    },
-                    response: {
-                        statusCode: 304,
-                        headers: {
-                            ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
-                        }
+                return expect({
+                    url: '/foobar.css',
+                    headers: {
+                        'If-None-Match': eTag
+                    }
+                }, 'to yield response', {
+                    statusCode: 304,
+                    headers: {
+                        ETag: expect.it('to match', /^W\/".*-autoprefixer\[[a-f0-9]{32}\]"$/)
                     }
                 });
             });
