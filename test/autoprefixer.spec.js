@@ -1,4 +1,3 @@
-/*global describe, it*/
 var express = require('express'),
     autoprefixer = require('../lib/autoprefixer');
 
