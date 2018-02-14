@@ -5,6 +5,23 @@ const expect = require('unexpected').installPlugin(
 );
 const fixturesPath = require('path').resolve(__dirname, './fixtures');
 
+// Css custom assertion
+var mensch = require('mensch');
+
+function parseAndPrettyPrint(cssString) {
+    return mensch.stringify(mensch.parse(cssString), {indentation: '  '});
+}
+
+expect.addAssertion('<string> to contain the same CSS as <string>', function (expect, subject, value) {
+    expect(parseAndPrettyPrint(subject), 'to equal', parseAndPrettyPrint(value));
+});
+
+expect.addAssertion('<string> to contain an inline source map [exhaustively] satisfying <object>', function (expect, subject, value) {
+    return expect(subject, 'to match', /(?:\/\*|\/\/)# sourceMappingURL=data:application\/json;base64,([^* ]*)/).spread(function ($0, base64Str) {
+        return expect(JSON.parse(new Buffer(base64Str, 'base64').toString('utf-8')), 'to [exhaustively] satisfy', value);
+    });
+});
+
 expect.addAssertion('to be served as', (expect, subject, value) => {
     const request = typeof subject === 'object' ? subject : {};
     const response = typeof value === 'object' ? value : {};
@@ -17,6 +34,8 @@ expect.addAssertion('to be served as', (expect, subject, value) => {
         request.url = '/style.css';
     }
     if (typeof value === 'string') {
+        response.body = value;
+    } else if (typeof value === 'function') {
         response.body = value;
     }
 
@@ -85,7 +104,15 @@ describe('express-autoprefixer', () => {
             headers: {
                 ETag: expect.it('to match', /-autoprefixer/)
             },
-            body: '.foo { -webkit-animation: bar; animation: bar; }'
+            body: expect.it('to contain the same CSS as', '.foo { -webkit-animation: bar; animation: bar; }')
+                .and('to contain an inline source map exhaustively satisfying', {
+                    version: 3,
+                    sources: [ '../../../../style.css' ],
+                    names: [],
+                    mappings: 'AAAA,OAAO,uBAAe,CAAf,eAAe,EAAE',
+                    file: '../../../../style.css',
+                    sourcesContent: [ '.foo { animation: bar; }' ]
+                })
         });
     });
 
@@ -93,7 +120,15 @@ describe('express-autoprefixer', () => {
         return expect(
             '.foo { -webkit-animation: bar; animation: bar; }',
             'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }'
+            expect.it('to contain the same CSS as', '.foo { -webkit-animation: bar; animation: bar; }')
+                .and('to contain an inline source map exhaustively satisfying', {
+                    version: 3,
+                    sources: [ '../../../../style.css' ],
+                    names: [],
+                    mappings: 'AAAA,OAAO,uBAAuB,CAAC,eAAe,EAAE',
+                    file: '../../../../style.css',
+                    sourcesContent: [ '.foo { -webkit-animation: bar; animation: bar; }' ]
+                })
         );
     });
 
@@ -104,7 +139,15 @@ describe('express-autoprefixer', () => {
                 browsers: 'Chrome > 30'
             },
             'to be served as',
-            '.foo { border-radius: 10px; }'
+            expect.it('to contain the same CSS as', '.foo { border-radius: 10px; }')
+                .and('to contain an inline source map exhaustively satisfying', {
+                    version: 3,
+                    sources: [ '../../../../style.css' ],
+                    names: [],
+                    mappings: 'AAAA,OAAO,oBAAoB,EAAE',
+                    file: '../../../../style.css',
+                    sourcesContent: [ '.foo { border-radius: 10px; }' ]
+                })
         );
     });
 
@@ -118,7 +161,15 @@ describe('express-autoprefixer', () => {
                 content: '.foo { animation: bar; }'
             },
             'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }'
+            expect.it('to contain the same CSS as', '.foo { -webkit-animation: bar; animation: bar; }')
+                .and('to contain an inline source map exhaustively satisfying', {
+                    version: 3,
+                    sources: [ '../../../../style.less' ],
+                    names: [],
+                    mappings: 'AAAA,OAAO,uBAAe,CAAf,eAAe,EAAE',
+                    file: '../../../../style.less',
+                    sourcesContent: [ '.foo { animation: bar; }' ]
+                })
         );
     });
 
@@ -132,7 +183,15 @@ describe('express-autoprefixer', () => {
                 content: '.foo { animation: bar; }'
             },
             'to be served as',
-            '.foo { -webkit-animation: bar; animation: bar; }'
+            expect.it('to contain the same CSS as', '.foo { -webkit-animation: bar; animation: bar; }')
+                .and('to contain an inline source map exhaustively satisfying', {
+                    version: 3,
+                    sources: [ '../../../../style.scss' ],
+                    names: [],
+                    mappings: 'AAAA,OAAO,uBAAe,CAAf,eAAe,EAAE',
+                    file: '../../../../style.scss',
+                    sourcesContent: [ '.foo { animation: bar; }' ]
+                })
         );
     });
 
@@ -205,8 +264,15 @@ describe('express-autoprefixer', () => {
                     headers: {
                         ETag: expect.it('not to be', etag)
                     },
-                    body:
-                        '.foo { -webkit-animation-name: bar; animation-name: bar; }\n'
+                    body: expect.it('to contain the same CSS as', '.foo { -webkit-animation-name: bar; animation-name: bar; }')
+                        .and('to contain an inline source map exhaustively satisfying', {
+                            version: 3,
+                            sources: [ '../../../../foobar.css' ],
+                            names: [],
+                            mappings: 'AAAA,OAAO,4BAAoB,CAApB,oBAAoB,EAAE',
+                            file: '../../../../foobar.css',
+                            sourcesContent: [ '.foo { animation-name: bar; }\n' ]
+                        })
                 }
             );
         });

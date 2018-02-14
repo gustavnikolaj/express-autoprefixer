@@ -28,20 +28,17 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
-    "autoprefixer": "^6.0.0",
+    "autoprefixer": "^8.0.0",
     "hijackresponse": "2.0.0",
     "lru-cache": "4.0.0",
-    "postcss": "^5.0.0"
-  },
-  "peerDependencies": {
-    "autoprefixer": "^6.0.0",
-    "postcss": "^5.0.0"
+    "postcss": "^6.0.17"
   },
   "devDependencies": {
     "eslint": "2.4.0",
     "eslint-config-onelint": "1.0.2",
     "express": "4.13.4",
     "jest": "20.0.4",
+    "mensch": "^0.3.3",
     "unexpected": "10.33.2",
     "unexpected-express": "9.1.0"
   }
