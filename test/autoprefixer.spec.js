@@ -122,6 +122,20 @@ describe('express-autoprefixer', () => {
         );
     });
 
+    it('should work with scss files served through express-compile-sass', () => {
+        // express-compile-sass will compile .scss files on the fly and serve the
+        // compiled content with content-type text/css on the original url.
+        return expect(
+            {
+                url: '/style.scss',
+                contentType: 'text/css',
+                content: '.foo { animation: bar; }'
+            },
+            'to be served as',
+            '.foo { -webkit-animation: bar; animation: bar; }'
+        );
+    });
+
     it('should serve html without throwing errors', () => {
         return expect(
             {
